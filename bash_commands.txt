@@ -1,0 +1,60 @@
+1) command to filter bam file to leave only single read per UMI:
+(samtools view -H 25_SSCV_KG_01_S1_Aligned.sortedByCoord.out.bam && \
+	samtools view 25_SSCV_KG_01_S1_Aligned.sortedByCoord.out.bam | \
+	awk 'BEGIN {FS="\t"; OFS="\t"} {if ($0 ~ /CB:Z:/ && $0 ~ /UB:Z:/ && $0 ~ /GN:Z:/) \
+	{ split($0, a, "CB:Z:"); split(a[2], b, " "); cb = b[1]; \
+	  split($0, a, "UB:Z:"); split(a[2], b, " "); ub = b[1]; \
+	  split($0, a, "GN:Z:"); split(a[2], b, " "); gn = b[1]; \
+	  if (!seen[cb":"ub":"gn]++) {print;}}' ; ) | samtools view -h -b - \
+	 > 25_SSCV_KG_01_S1_Aligned.sortedByCoord.out.bam.filtered
+------------------------------------------------------------------------------------------
+1) command to grab all lncs that have a single isoform
+cat gencode.v41.primary_assembly.annotation.gtf.filtered | grep "gene_type \"lncRNA\";" | \
+awk -F '\t' '$3 == "transcript"  {match($0, /gene_id "([^"]+)"/, g); gene_id=g[1]; match($0, /transcript_id "([^"]+)"/, t); transcript_id=t[1]; \
+transcripts[gene_id][transcript_id] = 1} ; END {for (gene in transcripts) {isoform_count = 0; for (transcript in transcripts[gene]) {isoform_count++;} if (isoform_count==1) {print gene} }}' > lncs_with_single_isoform.txt
+
+2) command to get gtf file with the transcript and exon lines of the genes from above (used for step 3)
+grep -f lncs_with_single_isoform.txt gencode.v41.primary_assembly.annotation.gtf.filtered | grep "transcript_id" > lncs_with_single_isoform.gtf
+
+3) command to get fasta file of the exonic regions
+gffread lncs_with_single_isoform.gtf -g Homo_sapiens.GRCh38.dna.primary_assembly.fa.modified -w lncs_with_single_isoform.fa
+---------------------------------------------------------------------------------------------
+1) command to grab all genes within a subset (in this case lncs with single isoform) that also have only a single exon
+grep -f lncs_with_single_isoform.txt gencode.v41.primary_assembly.annotation.gtf.filtered | \
+awk -F '\t' '$3 == "exon"  {match($0, /gene_id "([^"]+)"/, g); gene_id=g[1]; match($0, /exon_id "([^"]+)"/, e); exon_id=e[1]; \
+exons[gene_id][exon_id] = 1} ; END {for (gene in exons) {exon_count = 0; for (exon in exons[gene]) {exon_count++;} if (exon_count==1) {print gene} }}' > lncs_with_single_isoform_and_single_exon.txt
+----------------------------------------------------------------------------------------------------------------------
+1) command to grab reads coming from these lncs from the filtered (after retaining single read per UMI) bam file
+cd ../25_SSCV_KG_0${i}_S${i} && (samtools view -H 25_SSCV_KG_0{i}_S{i}_filtered.sorted.bam && samtools view -F 0x100 -F 0x400 -F 0x800 25_SSCV_KG_0${i}_S${i}_filtered.sorted.bam | grep -f ../genome_and_annotations/lncs_with_single_isoform.txt) | samtools view -h -b -o reads_from_lncs_with_single_isoform.bam
+--------------------------------------------------------------------------------------------------------------------
+komandos skirtos atlikti gene_body coverage analizę su rseqc:
+-----------------------------------------------------------------------------------------------------------
+1. bed failo sukūrimas pavieniam genui
+mkdir -p coverage_plots/${gene_name}/ && grep "\"GRCh38_${gene_name}\"" genome_and_annotations/gencode.v41.primary_assembly.annotation.gtf.filtered | head -n 1 | awk -f code/gtf_to_bed.awk > coverage_plots/${gene_name}/gene.bed
+
+2. pasiimi to geno seką
+bedtools getfasta -s -fi genome_and_annotations/Homo_sapiens.GRCh38.dna.primary_assembly.fa.modified -bed coverage_plots/${gene_name}/gene.bed -fo coverage_plots/${gene_name}/gene.fasta
+
+3. susikuri failą su A proporcija kiekviename bin'e
+tail -n 1 coverage_plots/${gene_name}/gene.fasta | python code/get_max_poly_x_run_in_bins.py > coverage_plots/${gene_name}/streaks_per_bin.txt
+
+4. atlieki coverage analizę
+geneBody_coverage.py -r coverage_plots/${gene_name}/gene.bed -i 25_SSCV_KG_01_S1/25_SSCV_KG_01_S1_filtered.sorted.bam,25_SSCV_KG_02_S2/25_SSCV_KG_02_S2_filtered.sorted.bam,25_SSCV_KG_03_S3/25_SSCV_KG_03_S3_filtered.sorted.bam,25_SSCV_KG_04_S4/25_SSCV_KG_04_S4_filtered.sorted.bam -o coverage_plots/${gene_name}/comparison
+
+5. susikuri failą su intronų/exonų regionais:
+strand=$(grep "\"GRCh38_${gene_name}\"" genome_and_annotations/gencode.v41.primary_assembly.annotation.gtf.filtered | awk -F "\t" '$3=="gene" {print $7}') && \
+echo "strand of gene ${gene_name} is ${strand}" && \
+grep "\"GRCh38_${gene_name}\"" genome_and_annotations/gencode.v41.primary_assembly.annotation.gtf.filtered | grep -v "transcript_type \"retained_intron\"" | grep -e "level 1" -e "level 2"|awk -F "\t" -v s="${strand}" '$3=="exon" && $7==s {print $0}' > coverage_plots/${gene_name}/exon_regions.gtf
+
+6. pasiruoši failus, kur šie regionai yra subinnint'i:
+python code/get_exons_per_bin.py -e coverage_plots/${gene_name}/exon_regions.gtf -g coverage_plots/${gene_name}/gene.bed > coverage_plots/${gene_name}/exons_per_bin.txt
+
+7. Tada pasiėimi tuos failus ir kažkaip gražiai papaišai:
+python code/plot_coverage.py -g {gene_name}
+
+Viskas sujungungta generate_plots.txt faile.
+
+
+--------------------------------------------JUODRAŠTIS--------------------------------------------------------------
+{samtools view -H 25_SSCV_KG_01_S1_filtered.sorted.bam; samtools view -F 0x100 -F 0x400 -F 0x800 25_SSCV_KG_01_S1_filtered.sorted.bam | grep -f ../genome_and_annotations/lncs_with_single_isoform.txt} | samtools view -h -b -o reads_from_lncs_with_single_isoform.bam
+
