@@ -1,0 +1,3 @@
+Contains notebooks for performing certain analyses.
+1)cell_type_annotation.ipynb - this notebook is used to inspect the top differentially expressed genes for a given cell type between Maxima and the other RT enzymes. The goal of this is to inspect which genes are differently expresed between the samples by also accounting for different cell type compositions between the samples.
+2)coverage_plotting and coverage_plotting_many_genes are used to inspect the (rseqc package based) gene body coverage plots for single and for multiple genes. Also there is this tool qualimap that allows to inspect gene body coverage of exonic regions.

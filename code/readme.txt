@@ -1,0 +1,2 @@
+Here are python scripts and bash commands used for generating various files, such as gene body coverage plots.
+Most of these files are utilized by the generate_plots.txt command. This command requires the RSeQC package to be installed
