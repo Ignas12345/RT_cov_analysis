@@ -1,0 +1,1 @@
+The notebooks here are used for analyzing how far away from a given streak of A nucleotides, a read is mapped. The final analysis is in the "analysis.ipynb" notebook, the others are used for preparing the data.
