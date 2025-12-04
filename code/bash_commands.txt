@@ -52,9 +52,44 @@ python code/get_exons_per_bin.py -e coverage_plots/${gene_name}/exon_regions.gtf
 7. Tada pasiėimi tuos failus ir kažkaip gražiai papaišai:
 python code/plot_coverage.py -g {gene_name}
 
-Viskas sujungungta generate_plots.txt faile.
+Viskas sujungta generate_plots.txt faile.
 
+-------------------------------------------------------------------------------------------------------------
+commands used for analyzing which part of the gene, the reads containing a TSO sequence map. For this we need to take the reads with a TSO sequence, and perform the mapping again to see which places the genes are mapped too.
+-------------------------------------------------------------------------------------------------------------
+1. Get the reads that contain a TSO sequence
+for i in {1..4}; do
+zcat 25_SSCV_KG_0${i}_S${i}_cdna_001.fastq.gz | grep -B 1 ^AAGCAGTGGTATCAACGCAGAGTACAT | grep @ | cut -f 1 -d ' ' > 25_SSCV_KG_0${i}_S${i}_reads_with_tso.txt;
+done
+2. Prepare fastq files containing only those reads
+for i in {1..4}; do
+zcat 25_SSCV_KG_0${i}_S${i}_cdna_001.fastq.gz | grep -A 3 -f 25_SSCV_KG_0${i}_S${i}_reads_with_tso.txt | grep -v -- "^--$" | sed 's/AAGCAGTGGTATCAACGCAGAGTACAT//'> reads_with_tso/25_SSCV_KG_0${i}_S${i}_cdna_001.fastq;
+zcat 25_SSCV_KG_0${i}_S${i}_bc_001.fastq.gz | grep -A 3 -f 25_SSCV_KG_0${i}_S${i}_reads_with_tso.txt | grep -v -- "^--$" > reads_with_tso/25_SSCV_KG_0${i}_S${i}_bc_001.fastq;
+done
+3. Trim the string containing the quality of the base calls
+for i in {1..4}; do
+awk '{if (NR%4==0) print substr($0, 28); else print $0}' 25_SSCV_KG_0${i}_S${i}_cdna_001.fastq > 25_SSCV_KG_0${i}_S${i}_cdna_001_trimmed.fastq
+done
+
+ALTERNATIVELY
+
+1. Get the reads that contain a TSO sequence
+for i in {1..4}; do
+zcat 25_SSCV_KG_0${i}_S${i}_cdna_001.fastq.gz | grep -B 1 ^AAGCAGTGGTATCAACGCAGAGTACAT | grep @ | cut -f 1 -d ' ' > 25_SSCV_KG_0${i}_S${i}_reads_with_tso.txt;
+done
+2. Prepare fastq files containing only those reads
+for i in {1..4}; do
+zcat 25_SSCV_KG_0${i}_S${i}_cdna_001.fastq.gz | grep -A 3 -f 25_SSCV_KG_0${i}_S${i}_reads_with_tso.txt | grep -v -- "^--$" > reads_with_tso/25_SSCV_KG_0${i}_S${i}_cdna_001.fastq;
+zcat 25_SSCV_KG_0${i}_S${i}_bc_001.fastq.gz | grep -A 3 -f 25_SSCV_KG_0${i}_S${i}_reads_with_tso.txt | grep -v -- "^--$" > reads_with_tso/25_SSCV_KG_0${i}_S${i}_bc_001.fastq;
+done
+3. Trim the string containing the quality of the base calls and the base call readout
+for i in {1..4}; do
+awk '{if (NR%4==0 || NR%4==3) print substr($0, 28); else print $0}' 25_SSCV_KG_0${i}_S${i}_cdna_001.fastq > 25_SSCV_KG_0${i}_S${i}_cdna_001_trimmed.fastq
+done
 
 --------------------------------------------JUODRAŠTIS--------------------------------------------------------------
-{samtools view -H 25_SSCV_KG_01_S1_filtered.sorted.bam; samtools view -F 0x100 -F 0x400 -F 0x800 25_SSCV_KG_01_S1_filtered.sorted.bam | grep -f ../genome_and_annotations/lncs_with_single_isoform.txt} | samtools view -h -b -o reads_from_lncs_with_single_isoform.bam
+for i in {1..4}; do
+gzip 25_SSCV_KG_0${i}_S${i}_bc_001.fastq;
+gzip 25_SSCV_KG_0${i}_S${i}_cdna_001.fastq;
+done
 
