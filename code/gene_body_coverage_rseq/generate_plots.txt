@@ -1,9 +1,10 @@
-echo starting pipeline for gene ${gene_name} && mkdir -p coverage_plots/${gene_name}/ && grep "\"GRCh38_${gene_name}\"" genome_and_annotations/gencode.v41.primary_assembly.annotation.gtf.filtered | head -n 1 | awk -f code/gtf_to_bed.awk > coverage_plots/${gene_name}/gene.bed && echo 'full gene bed file generated' &&\
+#this file should be run from RT_analysis directory
+echo starting pipeline for gene ${gene_name} && mkdir -p coverage_plots/${gene_name}/ && grep "\"GRCh38_${gene_name}\"" genome_and_annotations/gencode.v41.primary_assembly.annotation.gtf.filtered | head -n 1 | awk -f code/generate_plots_using_rseq/gtf_to_bed.awk > coverage_plots/${gene_name}/gene.bed && echo 'full gene bed file generated' &&\
 bedtools getfasta -s -fi genome_and_annotations/Homo_sapiens.GRCh38.dna.primary_assembly.fa.modified -bed coverage_plots/${gene_name}/gene.bed -fo coverage_plots/${gene_name}/gene.fasta && echo 'gene fasta file generated' &&\
-tail -n 1 coverage_plots/${gene_name}/gene.fasta | python code/get_max_poly_x_run_in_bins.py -m 1 > coverage_plots/${gene_name}/streaks_per_bin.txt && echo 'got files with max poly-x streaks per bin' &&\
+tail -n 1 coverage_plots/${gene_name}/gene.fasta | python code/generate_plots_using_rseq/get_max_poly_x_run_in_bins.py -m 1 > coverage_plots/${gene_name}/streaks_per_bin.txt && echo 'got files with max poly-x streaks per bin' &&\
 geneBody_coverage.py -r coverage_plots/${gene_name}/gene.bed -i 25_SSCV_KG_01_S1/25_SSCV_KG_01_S1_filtered.sorted.bam,25_SSCV_KG_02_S2/25_SSCV_KG_02_S2_filtered.sorted.bam,25_SSCV_KG_03_S3/25_SSCV_KG_03_S3_filtered.sorted.bam,25_SSCV_KG_04_S4/25_SSCV_KG_04_S4_filtered.sorted.bam -o coverage_plots/${gene_name}/comparison && echo 'gene body coverage mapping done' &&\
 strand=$(grep "\"GRCh38_${gene_name}\"" genome_and_annotations/gencode.v41.primary_assembly.annotation.gtf.filtered | awk -F "\t" '$3=="gene" {print $7}') && \
 echo "strand of gene ${gene_name} is ${strand}, obtaining exonic regions for level 1 and level 2 annotated transcript isoforms" && \
 grep "\"GRCh38_${gene_name}\"" genome_and_annotations/gencode.v41.primary_assembly.annotation.gtf.filtered | grep -v "transcript_type \"retained_intron\"" | grep -e "level 1" -e "level 2"|awk -F "\t" -v s="${strand}" '$3=="exon" && $7==s {print $0}' > coverage_plots/${gene_name}/exon_regions.gtf &&\
-python code/get_exons_per_bin.py -e coverage_plots/${gene_name}/exon_regions.gtf -g coverage_plots/${gene_name}/gene.bed > coverage_plots/${gene_name}/exons_per_bin.txt && echo 'exon regions mapped to bins, performing plotting' &&\
-python code/plot_coverage.py -g ${gene_name}
+python code/gene_body_coverage_rseqc/get_exons_per_bin.py -e coverage_plots/${gene_name}/exon_regions.gtf -g coverage_plots/${gene_name}/gene.bed > coverage_plots/${gene_name}/exons_per_bin.txt && echo 'exon regions mapped to bins, performing plotting' &&\
+python code/generate_plots_using_rseq/plot_coverage.py -g ${gene_name}
