@@ -83,10 +83,13 @@ zcat 25_SSCV_KG_0${i}_S${i}_cdna_001.fastq.gz | grep -A 3 -f 25_SSCV_KG_0${i}_S$
 zcat 25_SSCV_KG_0${i}_S${i}_bc_001.fastq.gz | grep -A 3 -f 25_SSCV_KG_0${i}_S${i}_reads_with_tso.txt | grep -v -- "^--$" > reads_with_tso/25_SSCV_KG_0${i}_S${i}_bc_001.fastq;
 done
 3. Trim the string containing the quality of the base calls and the base call readout
+cd reads_with_tso
+
 for i in {1..4}; do
-awk '{if (NR%4==0 || NR%4==3) print substr($0, 28); else print $0}' 25_SSCV_KG_0${i}_S${i}_cdna_001.fastq > 25_SSCV_KG_0${i}_S${i}_cdna_001_trimmed.fastq
+awk '{if (NR%4==0 || NR%4==2) print substr($0, 28); else print $0}' 25_SSCV_KG_0${i}_S${i}_cdna_001.fastq > 25_SSCV_KG_0${i}_S${i}_cdna_001_trimmed.fastq
 done
 
+4. Perform alignment using Star (command in STAR_tso_reads.txt)
 --------------------------------------------JUODRAŠTIS--------------------------------------------------------------
 for i in {1..4}; do
 gzip 25_SSCV_KG_0${i}_S${i}_bc_001.fastq;
