@@ -1,0 +1,20 @@
+for i in {1..4}; do
+STAR --runThreadN 14 \
+  --genomeDir /home/simonasj/references/genome/GRCh38_Ensembl_107/index/ \
+  --readFilesIn /tmp/Mazutislab-out/Ignas/RT_comparison/combined_fastqs/reads_with_tso/25_SSCV_KG_0${i}_S${i}_cdna_001_trimmed.fastq /tmp/Mazutislab-out/Ignas/RT_comparison/combined_fastqs/reads_with_tso/25_SSCV_KG_0${i}_S${i}_bc_001.fastq \
+  --soloCBwhitelist /tmp/Mazutislab-out/Ignas/RT_comparison/combined_fastqs/bc1_list.txt /tmp/Mazutislab-out/Ignas/RT_comparison/combined_fastqs/bc2_list.txt /tmp/Mazutislab-out/Ignas/RT_comparison/combined_fastqs/bc3_list.txt \
+  --readFilesCommand cat \
+  --outFileNamePrefix /tmp/Mazutislab-out/Ignas/RT_comparison/25_SSCV_KG_0${i}_S${i}_reads_with_tso/25_SSCV_KG_0${i}_S${i}_reads_with_tso_ \
+  --alignIntronMax 0 \
+  --outSAMunmapped Within \
+  --outSAMtype BAM SortedByCoordinate \
+  --outBAMsortingBinsN 20 \
+  --outSAMattributes NH   HI   nM   AS   CR   UR   CB   UB   sS   sQ   sM   GX   GN \
+  --soloType CB_UMI_Complex \
+  --soloUMIdedup Exact \
+  --soloCBposition 0_0_0_7 0_8_0_17 0_18_0_25 \
+  --soloUMIposition 0_26_0_35 \
+  --soloBarcodeReadLength 1 \
+  --soloCBmatchWLtype EditDist_2 \
+  --soloMultiMappers Uniform
+done
