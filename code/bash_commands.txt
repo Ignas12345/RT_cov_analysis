@@ -94,16 +94,19 @@ done
 Prepare some files containing some statistics
 --------------------------------------------------------------------------------------------------------------------
 1. inspect the fraction of reads with TSO for each sample
-(echo -e "sample\tn_total\tn_tso\tn_tso_at_start\tfrac_tso\tfrac_tso_at_start" > /tmp/Mazutislab-out/Ignas/RT_comparison/tso_frequencies.txt;
+(echo -e "sample\tn_total\tn_tso\tn_tso_at_start\tfrac_tso\tfrac_tso_at_start\tfrac_tso_at_end" > /tmp/Mazutislab-out/Ignas/RT_comparison/tso_frequencies.txt;
 for i in {1..4}; do
-(n_total=$(( $(zcat 25_SSCV_KG_0${i}_S${i}_cdna_001.fastq.gz | wc -l) / 4 )) 
-reads_with_tso=$(zcat 25_SSCV_KG_0${i}_S${i}_cdna_001.fastq.gz | grep AAGCAGTGGTATCAACGCAGAGTACAT)
-n_tso=$(echo $reads_with_tso | wc -l) 
-n_tso_at_start=$(echo $reads_with_tso | grep ^AAGCAGTGGTATCAACGCAGAGTACAT |  wc -l)
-frac_tso=${n_tso}/${n_total}
-frac_tso_at_start=${n_tso_at_start}/${n_total}
-echo -e "${i}\t${n_total}\t${n_tso}\t${n_tso_at_start}\t${frac_tso}\t${frac_tso_at_start}") >> /tmp/Mazutislab-out/Ignas/RT_comparison/tso_frequencies.txt;
-done) 
+n_total=$(( $(zcat 25_SSCV_KG_0${i}_S${i}_cdna_001.fastq.gz | wc -l) / 4 ));
+zcat 25_SSCV_KG_0${i}_S${i}_cdna_001.fastq.gz | grep 'AAGCAGTGGTATCAACGCAGAGTACAT' > tmp_reads_with_tso.txt;
+n_tso=$(wc -l < tmp_reads_with_tso.txt);
+n_tso_at_start=$(grep -c '^AAGCAGTGGTATCAACGCAGAGTACAT' tmp_reads_with_tso.txt);
+n_tso_at_end=$(grep -c 'AAGCAGTGGTATCAACGCAGAGTACAT$' tmp_reads_with_tso.txt);
+rm tmp_reads_with_tso.txt;
+frac_tso=$(echo "${n_tso}/${n_total}" | bc -l);
+frac_tso_at_start=$(echo "${n_tso_at_start}/${n_total}" | bc -l);
+frac_tso_at_end=$(echo "${n_tso_at_end}/${n_total}" | bc -l);
+echo -e "${i}\t${n_total}\t${n_tso}\t${n_tso_at_start}\t${frac_tso}\t${frac_tso_at_start}\t${frac_tso_at_end}" >> /tmp/Mazutislab-out/Ignas/RT_comparison/tso_frequencies.txt;
+done)
 
 2. for inspecting how many sequences with TSO at the end are mapped 
 (echo -e "sample\tn_reads\tn_reads_mapped_to_genes\tn_reads_unmapped\tn_reads_mapped_not_to_gene\n";
