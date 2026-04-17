@@ -1,0 +1,26 @@
+samples:
+  - 25_SSCV_KG_01_S1
+  - 25_SSCV_KG_02_S2
+  - 25_SSCV_KG_03_S3
+  - 25_SSCV_KG_04_S4
+
+# Directory containing the raw paired fastq.gz files
+# Expected files: {data_dir}/{sample}_cdna_001.fastq.gz and {data_dir}/{sample}_bc_001.fastq.gz
+data_dir: /tmp/Mazutislab-out/Ignas/RT_comparison/combined_fastqs
+
+# Output directory
+out_dir: /tmp/Mazutislab-out/Ignas/RT_comparison
+
+# TSO sequence to detect
+tso: AAGCAGTGGTATCAACGCAGAGTACAT
+
+# Maximum error rate for TSO matching (e.g. 0.1 = 10%, ~2-3 mismatches in 27 bp TSO)
+tso_error_rate: 0.1
+
+# STAR genome index directory
+genome_dir: /home/simonasj/references/genome/GRCh38_Ensembl_107/index/
+
+# Barcode whitelists (three-level combinatorial barcoding)
+bc1_whitelist: /tmp/Mazutislab-out/Ignas/RT_comparison/combined_fastqs/bc1_list.txt
+bc2_whitelist: /tmp/Mazutislab-out/Ignas/RT_comparison/combined_fastqs/bc2_list.txt
+bc3_whitelist: /tmp/Mazutislab-out/Ignas/RT_comparison/combined_fastqs/bc3_list.txt
