@@ -5,16 +5,24 @@ DATA_DIR = config["data_dir"]
 OUT_DIR = config["out_dir"]
 TSO = config["tso"]
 
+# Input fastq filename suffixes (relative to DATA_DIR/{sample})
+CDNA_SUFFIX = "_cdna_001.fastq.gz"
+BC_SUFFIX = "_bc_001.fastq.gz"
+
+# Output fastq filename suffixes for TSO-containing reads (relative to OUT_DIR/{sample}/reads_with_tso)
+CDNA_TRIMMED_SUFFIX = "_cdna_001_trimmed.fastq"
+BC_OUT_SUFFIX = "_bc_001.fastq"
+
 
 rule all:
     input:
         expand(
-            "{out_dir}/{sample}/reads_with_tso/{sample}_cdna_001_trimmed.fastq",
+            "{out_dir}/{sample}/reads_with_tso/{sample}" + CDNA_TRIMMED_SUFFIX,
             out_dir=OUT_DIR,
             sample=SAMPLES,
         ),
         expand(
-            "{out_dir}/{sample}/reads_with_tso/{sample}_bc_001.fastq",
+            "{out_dir}/{sample}/reads_with_tso/{sample}" + BC_OUT_SUFFIX,
             out_dir=OUT_DIR,
             sample=SAMPLES,
         ),
@@ -29,11 +37,11 @@ rule detect_tso:
     trimming, and remapping.
     """
     input:
-        cdna=DATA_DIR + "/{sample}_cdna_001.fastq.gz",
-        bc=DATA_DIR + "/{sample}_bc_001.fastq.gz",
+        cdna=DATA_DIR + "/{sample}" + CDNA_SUFFIX,
+        bc=DATA_DIR + "/{sample}" + BC_SUFFIX,
     output:
-        cdna=OUT_DIR + "/{sample}/reads_with_tso/{sample}_cdna_001_trimmed.fastq",
-        bc=OUT_DIR + "/{sample}/reads_with_tso/{sample}_bc_001.fastq",
+        cdna=OUT_DIR + "/{sample}/reads_with_tso/{sample}" + CDNA_TRIMMED_SUFFIX,
+        bc=OUT_DIR + "/{sample}/reads_with_tso/{sample}" + BC_OUT_SUFFIX,
     params:
         tso=TSO,
         error_rate=config["tso_error_rate"],
