@@ -46,6 +46,8 @@ rule detect_tso:
         tso=TSO,
         error_rate=config["tso_error_rate"],
     threads: 4
+    conda:
+        "envs/cutadapt.yaml"
     shell:
         """
         cutadapt \
@@ -76,6 +78,8 @@ rule star_mapping:
         bc3_whitelist=config["bc3_whitelist"],
         prefix=OUT_DIR + "/{sample}/star/{sample}_",
     threads: 14
+    conda:
+        "envs/star.yaml"
     shell:
         """
         STAR \
