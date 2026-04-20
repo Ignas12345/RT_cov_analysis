@@ -1,15 +1,13 @@
 samples:
-  - 25_SSCV_KG_01_S1
-  - 25_SSCV_KG_02_S2
-  - 25_SSCV_KG_03_S3
-  - 25_SSCV_KG_04_S4
+  - 25_SSCV_KG_05_S5
+  - 25_SSCV_KG_06_S6
 
 # Directory containing the raw paired fastq.gz files
 # Expected files: {data_dir}/{sample}_cdna_001.fastq.gz and {data_dir}/{sample}_bc_001.fastq.gz
-data_dir: /tmp/Mazutislab-out/Ignas/RT_comparison/combined_fastqs
+data_dir: /tmp/Mazutislab-out/Karolis/Samples/260409_VH02338_14_AAF2KJHHV/260409_VH02338_14_AAF2KJHHV_out/25_SSCV_KG/merged_fastq
 
 # Output directory
-out_dir: /tmp/Mazutislab-out/Ignas/RT_comparison
+out_dir: /tmp/Mazutislab-out/Ignas/RT_comparison/results
 
 # TSO sequence to detect
 tso: AAGCAGTGGTATCAACGCAGAGTACAT
@@ -21,6 +19,4 @@ tso_error_rate: 0.1
 genome_dir: /home/simonasj/references/genome/GRCh38_Ensembl_107/index/
 
 # Barcode whitelists (three-level combinatorial barcoding)
-bc1_whitelist: /tmp/Mazutislab-out/Ignas/RT_comparison/combined_fastqs/bc1_list.txt
-bc2_whitelist: /tmp/Mazutislab-out/Ignas/RT_comparison/combined_fastqs/bc2_list.txt
-bc3_whitelist: /tmp/Mazutislab-out/Ignas/RT_comparison/combined_fastqs/bc3_list.txt
+whitelist_dir: /home/simonasj/references/barcodes/in_drop_v2024/

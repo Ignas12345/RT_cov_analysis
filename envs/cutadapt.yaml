@@ -4,4 +4,4 @@ channels:
   - conda-forge
   - defaults
 dependencies:
-  - cutadapt=4.9
+  - cutadapt=5.2
