@@ -20,6 +20,9 @@ tso_error_rate: 0.1
 # STAR genome index directory
 genome_dir: /home/simonasj/references/genome/GRCh38_Ensembl_107/index/
 
+# GTF annotation file (used to filter for single-isoform genes)
+gtf: /tmp/Mazutislab-out/Ignas/RT_comparison/genome_and_annotations/gencode.v41.primary_assembly.annotation.gtf.filtered
+
 # Barcode whitelists (three-level combinatorial barcoding)
 bc1_whitelist: /tmp/Mazutislab-out/Ignas/RT_comparison/combined_fastqs/bc1_list.txt
 bc2_whitelist: /tmp/Mazutislab-out/Ignas/RT_comparison/combined_fastqs/bc2_list.txt
