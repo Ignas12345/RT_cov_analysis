@@ -110,4 +110,7 @@ rule star_mapping:
             --soloBarcodeReadLength 1 \
             --soloCBmatchWLtype EditDist_2 \
             --soloMultiMappers Uniform
+
+            samtools index {output.bam}
         """
+
