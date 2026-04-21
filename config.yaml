@@ -19,7 +19,7 @@ tso_error_rate: 0.1
 genome_dir: /home/simonasj/references/genome/GRCh38_Ensembl_107/index/
 
 # GTF annotation file (used to filter for single-isoform genes)
-gtf: /tmp/Mazutislab-out/Ignas/RT_comparison/genome_and_annotations/gencode.v41.primary_assembly.annotation.gtf.filtered
+gtf: /home/simonasj/references/genome/GRCh38_Ensembl_107/human/gencode.v41.primary_assembly.annotation.gtf.filtered
 
 # Barcode whitelists (three-level combinatorial barcoding)
 whitelist_dir: /home/simonasj/references/barcodes/in_drop_v2024/

@@ -144,7 +144,9 @@ rule filter_single_isoform_genes:
         gene_names = {}
 
         with open(input.gtf) as fh:
-            for line in fh:
+            for i, line in enumerate(fh):
+                if i % 100000 == 0:
+                    print(f"Processed {i} lines out of {len(fh)}", flush=True)
                 if line.startswith("#"):
                     continue
                 fields = line.rstrip("\n").split("\t")
