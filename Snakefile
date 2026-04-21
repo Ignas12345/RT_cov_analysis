@@ -18,18 +18,18 @@ BC_OUT_SUFFIX = "_bc_001.fastq"
 rule all:
     input:
         expand(
-            "{out_dir}/{sample}/reads_with_tso/{sample}" + CDNA_TRIMMED_SUFFIX,
+            "{out_dir}/detect_tso/{sample}/{sample}" + CDNA_TRIMMED_SUFFIX,
             out_dir=OUT_DIR,
             sample=SAMPLES,
         ),
         expand(
-            "{out_dir}/{sample}/reads_with_tso/{sample}" + BC_OUT_SUFFIX,
+            "{out_dir}/detect_tso/{sample}/{sample}" + BC_OUT_SUFFIX,
             out_dir=OUT_DIR,
             sample=SAMPLES,
         ),
-        OUT_DIR + "/genome_and_annotations/single_isoform_genes.txt",
+        OUT_DIR + "/filter_single_isoform_genes/single_isoform_genes.txt",
         expand(
-            "{out_dir}/{sample}/star/{sample}_Aligned.sortedByCoord.out.bam",
+            "{out_dir}/star_mapping/{sample}/{sample}_Aligned.sortedByCoord.out.bam",
             out_dir=OUT_DIR,
             sample=SAMPLES,
         ),
@@ -47,8 +47,8 @@ rule detect_tso:
         cdna=DATA_DIR + "/{sample}" + CDNA_SUFFIX,
         bc=DATA_DIR + "/{sample}" + BC_SUFFIX,
     output:
-        cdna=OUT_DIR + "/{sample}/reads_with_tso/{sample}" + CDNA_TRIMMED_SUFFIX,
-        bc=OUT_DIR + "/{sample}/reads_with_tso/{sample}" + BC_OUT_SUFFIX,
+        cdna=OUT_DIR + "/detect_tso/{sample}/{sample}" + CDNA_TRIMMED_SUFFIX,
+        bc=OUT_DIR + "/detect_tso/{sample}/{sample}" + BC_OUT_SUFFIX,
     params:
         tso=TSO,
         error_rate=config["tso_error_rate"],
@@ -79,13 +79,13 @@ rule star_mapping:
         cdna=rules.detect_tso.output.cdna,
         bc=rules.detect_tso.output.bc,
     output:
-        bam=OUT_DIR + "/{sample}/star/{sample}_Aligned.sortedByCoord.out.bam",
+        bam=OUT_DIR + "/star_mapping/{sample}/{sample}_Aligned.sortedByCoord.out.bam",
     params:
         genome_dir=config["genome_dir"],
         bc1_whitelist=os.path.join(config["whitelist_dir"],"bc1_list.txt"),
         bc2_whitelist=os.path.join(config["whitelist_dir"],"bc2_list.txt"),
         bc3_whitelist=os.path.join(config["whitelist_dir"],"bc3_list.txt"),
-        prefix=OUT_DIR + "/{sample}/star/{sample}_",
+        prefix=OUT_DIR + "/star_mapping/{sample}/{sample}_",
     threads: 14
     conda:
         "envs/star.yaml"
@@ -130,49 +130,8 @@ rule filter_single_isoform_genes:
     input:
         gtf=GTF,
     output:
-        OUT_DIR + "/genome_and_annotations/single_isoform_genes.txt",
-    run:
-        import re
-        from collections import defaultdict
-        import os
-
-        os.makedirs(os.path.dirname(output[0]), exist_ok=True)
-
-        # gene_id -> set of transcript_ids seen for that gene
-        gene_transcripts = defaultdict(set)
-        # gene_id -> gene_name (last value wins, but it's stable per gene)
-        gene_names = {}
-
-        with open(input.gtf) as fh:
-            for i, line in enumerate(fh):
-                if i % 100000 == 0:
-                    print(f"Processed {i} lines out of {len(fh)}", flush=True)
-                if line.startswith("#"):
-                    continue
-                fields = line.rstrip("\n").split("\t")
-                if len(fields) < 9 or fields[2] != "transcript":
-                    continue
-                attr = fields[8]
-
-                m = re.search(r'gene_id "([^"]+)"', attr)
-                if not m:
-                    continue
-                gene_id = m.group(1)
-
-                m = re.search(r'transcript_id "([^"]+)"', attr)
-                if not m:
-                    continue
-                transcript_id = m.group(1)
-
-                m = re.search(r'gene_name "([^"]+)"', attr)
-                gene_name = m.group(1) if m else gene_id
-
-                gene_transcripts[gene_id].add(transcript_id)
-                gene_names[gene_id] = gene_name
-
-        with open(output[0], "w") as out:
-            for gene_id, transcripts in sorted(gene_transcripts.items()):
-                if len(transcripts) == 1:
-                    transcript_id = next(iter(transcripts))
-                    gene_name = gene_names[gene_id]
-                    out.write(f"{gene_id} {gene_name} {transcript_id}\n")
+        OUT_DIR + "/filter_single_isoform_genes/single_isoform_genes.txt",
+    log:
+        os.path.join(OUT_DIR, "logs/filter_single_isoform_genes/filter_single_isoform_genes.log")
+    script:
+        "scripts/filter_single_isoform_genes.py"
