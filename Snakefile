@@ -28,6 +28,11 @@ rule all:
             sample=SAMPLES,
         ),
         OUT_DIR + "/genome_and_annotations/single_isoform_genes.txt",
+        expand(
+            "{out_dir}/{sample}/star/{sample}_Aligned.sortedByCoord.out.bam",
+            out_dir=OUT_DIR,
+            sample=SAMPLES,
+        ),
 
 
 rule detect_tso:
@@ -50,12 +55,14 @@ rule detect_tso:
     threads: 4
     conda:
         "envs/cutadapt.yaml"
+    log:
+        os.path.join(OUT_DIR, "logs/detect_tso/{sample}.log")
     shell:
         """
         cutadapt \
             -g {params.tso} \
             --discard-untrimmed \
-            -e {params.error_rate} \
+            -m 30 \
             -j {threads} \
             -o {output.cdna} \
             -p {output.bc} \
@@ -75,13 +82,15 @@ rule star_mapping:
         bam=OUT_DIR + "/{sample}/star/{sample}_Aligned.sortedByCoord.out.bam",
     params:
         genome_dir=config["genome_dir"],
-        bc1_whitelist=config["bc1_whitelist"],
-        bc2_whitelist=config["bc2_whitelist"],
-        bc3_whitelist=config["bc3_whitelist"],
+        bc1_whitelist=os.path.join(config["whitelist_dir"],"bc1_list.txt"),
+        bc2_whitelist=os.path.join(config["whitelist_dir"],"bc2_list.txt"),
+        bc3_whitelist=os.path.join(config["whitelist_dir"],"bc3_list.txt"),
         prefix=OUT_DIR + "/{sample}/star/{sample}_",
     threads: 14
     conda:
         "envs/star.yaml"
+    log:
+        os.path.join(OUT_DIR, "logs/star_mapping/{sample}.log")
     shell:
         """
         STAR \
@@ -103,9 +112,10 @@ rule star_mapping:
             --soloBarcodeReadLength 1 \
             --soloCBmatchWLtype EditDist_2 \
             --soloMultiMappers Uniform
+
+            samtools index {output.bam}
         """
-
-
+        
 rule filter_single_isoform_genes:
     """
     Parse a GTF annotation file and write out all genes that have exactly one
